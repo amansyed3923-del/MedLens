@@ -1,0 +1,13 @@
+QUEST DIAGNOSTICS - CLINICAL REPORT
+PATIENT: Jane Doe          DOB: 1979-04-12    AGE: 45    SEX: Female
+COLLECTED: 2026-08-28 08:30    RECEIVED: 2026-08-28 11:15    REPORTED: 2026-08-29 09:00
+ORDERING PHYSICIAN: Dr. Robert Vance, MD
+
+TEST NAME                       IN RANGE    OUT OF RANGE    REFERENCE RANGE    UNITS
+-------------------------------------------------------------------------------------
+TSH                                         6.20     H      0.40 - 4.50        mIU/L
+Free T4                         1.15                        0.80 - 1.80        ng/dL
+Total T3                        112                         76 - 181           ng/dL
+Thyroid Peroxidase Ab                       48.0     H      < 35.0             IU/mL
+Thyroglobulin Antibody                      < 1.0           < 1.0              IU/mL
+Thyroid Status Note             Euthyroid with elevated TSH

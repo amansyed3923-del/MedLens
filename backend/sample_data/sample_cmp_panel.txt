@@ -1,0 +1,25 @@
+LABCORP INTEGRATED REPORTING
+PATIENT: Johnathan Smith    DOB: 1968-11-03    AGE: 57    SEX: Male
+SPECIMEN ID: LC-889210      FASTING: YES
+COLLECTED: 2026-08-30 07:45    REPORTED: 2026-08-31 06:10
+
+TEST NAME                       IN RANGE    OUT OF RANGE    REFERENCE RANGE    UNITS
+-------------------------------------------------------------------------------------
+Glucose, Serum                              148      H      70 - 99            mg/dL
+BUN                             18                          7 - 20             mg/dL
+Creatinine, Serum                           1.45     H      0.60 - 1.20        mg/dL
+eGFR                                        52       L      > 60               mL/min/1.73m2
+Sodium                          139                         135 - 145          mmol/L
+Potassium                       4.6                         3.5 - 5.1          mmol/L
+Chloride                        102                         96 - 106           mmol/L
+Carbon Dioxide                  24                          20 - 29            mmol/L
+Calcium                         9.4                         8.6 - 10.2         mg/dL
+Total Protein                   7.2                         6.0 - 8.5          g/dL
+Albumin                         4.1                         3.5 - 5.0          g/dL
+Total Bilirubin                 0.7                         0.2 - 1.2          mg/dL
+Alkaline Phosphatase            68                          44 - 121           U/L
+AST (SGOT)                      26                          10 - 40            U/L
+ALT (SGPT)                      32                          7 - 56             U/L
+Hemoglobin A1c                              7.1      H      < 5.7              %
+Serum Osmolality                292                         275 - 295          mOsm/kg
+Unspecified Research Marker     14.2

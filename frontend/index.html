@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MedLens — AI-Powered Clinical Information Intelligence</title>
+  <meta name="description" content="Consolidates fragmented patient intake, medical report PDFs, and lab scans into a structured, FHIR-aligned, reviewable clinical dashboard with strict safety controls.">
+  
+  <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="medlens-app">
+  <!-- Top Navigation Bar -->
+  <header class="navbar" id="main-header">
+    <div class="nav-left">
+      <div class="brand-badge">
+        <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+        </svg>
+        <span class="brand-title">MedLens</span>
+        <span class="brand-sub">Clinical Intelligence</span>
+      </div>
+      <div class="status-pill fhir-pill" id="fhir-badge" title="HL7 FHIR Release 4 Schema Compliant">
+        <span class="pulse-dot"></span>
+        <span>FHIR R4 Aligned</span>
+      </div>
+      <div class="status-pill safety-pill" title="Strict Non-Diagnostic Guardrails Active">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+        <span>Zero-Hallucination Safe</span>
+      </div>
+    </div>
+
+    <!-- Quick Scenario Switcher & Actions -->
+    <div class="nav-right">
+      <div class="scenario-group">
+        <span class="scenario-label">Quick Scenarios:</span>
+        <button class="scenario-btn active" id="btn-load-thyroid" data-scenario="thyroid" title="Simulates Patient taking Levothyroxine with High TSH but no thyroid condition">
+          <span class="btn-icon">⚡</span> 1. Thyroid Mismatch
+        </button>
+        <button class="scenario-btn" id="btn-load-cmp" data-scenario="cmp" title="Simulates Comprehensive Metabolic Panel with high glucose, creatinine & low eGFR">
+          <span class="btn-icon">🧪</span> 2. CMP Panel
+        </button>
+        <button class="scenario-btn" id="btn-load-cbc" data-scenario="cbc" title="Simulates Complete Blood Count with low hemoglobin & unspecified factor">
+          <span class="btn-icon">🩸</span> 3. CBC Anemia
+        </button>
+      </div>
+
+      <div class="nav-actions">
+        <button class="btn btn-outline" id="btn-view-fhir" title="View Full FHIR R4 Bundle JSON">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="16 18 22 12 16 6"/>
+            <polyline points="8 6 2 12 8 18"/>
+          </svg>
+          FHIR JSON
+        </button>
+        <button class="btn btn-ghost" id="btn-reset-session" title="Reset current session to defaults">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+            <path d="M21 3v5h-5"/>
+            <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+            <path d="M3 21v-5h5"/>
+          </svg>
+          Reset
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container: Side-by-Side View -->
+  <main class="dashboard-split" id="dashboard-root">
+    
+    <!-- LEFT PANE: Source Document & Multimodal Extraction -->
+    <aside class="left-pane" id="source-pane">
+      <div class="pane-header">
+        <div class="pane-title-wrap">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+            <polyline points="10 9 9 9 8 9"/>
+          </svg>
+          <h2>Source Document & Extraction</h2>
+        </div>
+        <span class="file-name-badge" id="current-doc-name">sample_thyroid_panel.pdf</span>
+      </div>
+
+      <!-- File Dropzone -->
+      <div class="dropzone" id="file-dropzone">
+        <input type="file" id="file-input" accept=".pdf,.txt,.png,.jpg,.jpeg" class="file-input-hidden">
+        <div class="dropzone-content">
+          <div class="dropzone-icon">
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+          </div>
+          <p class="dropzone-title">Drop lab PDF or image here</p>
+          <p class="dropzone-hint">Supports PDF reports, scanned slips, or text results</p>
+          <button type="button" class="btn btn-sm btn-primary" id="btn-browse-file">Browse Files</button>
+        </div>
+        <div class="dropzone-loading hidden" id="dropzone-loader">
+          <div class="spinner"></div>
+          <span>Parsing clinical report & extracting observations...</span>
+        </div>
+      </div>
+
+      <!-- Document Inspector with Tabs -->
+      <div class="doc-inspector card">
+        <div class="tabs-nav">
+          <button class="tab-btn active" data-tab="preview-tab">Document View</button>
+          <button class="tab-btn" data-tab="raw-tab">Raw Extracted Text</button>
+          <button class="tab-btn" data-tab="audit-tab">Audit & Provenance Log</button>
+        </div>
+
+        <div class="tab-content active" id="preview-tab">
+          <div class="document-paper" id="doc-paper-render">
+            <!-- Rendered document view -->
+            <div class="paper-header">
+              <div class="lab-title" id="paper-lab-title">QUEST DIAGNOSTICS - CLINICAL REPORT</div>
+              <div class="paper-meta-grid" id="paper-meta-info">
+                <span><strong>Patient:</strong> Jane Doe (Age: 45, Sex: F)</span>
+                <span><strong>Order Date:</strong> 2026-08-28</span>
+                <span><strong>Specimen:</strong> Serum</span>
+                <span><strong>Status:</strong> Final Complete</span>
+              </div>
+            </div>
+            <div class="paper-divider"></div>
+            <div class="paper-body" id="paper-body-content">
+              <!-- Dynamically populated report preview -->
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-content" id="raw-tab">
+          <div class="raw-text-container">
+            <pre class="raw-code" id="raw-text-content">Loading source raw lines...</pre>
+          </div>
+        </div>
+
+        <div class="tab-content" id="audit-tab">
+          <div class="audit-stream" id="audit-stream-content">
+            <!-- Provenance trace items populated dynamically -->
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- RIGHT PANE: Structured FHIR Clinical Dashboard -->
+    <section class="right-pane" id="clinical-pane">
+      
+      <!-- Patient Intake Bar Card -->
+      <div class="patient-intake-card card" id="patient-intake-section">
+        <div class="card-header">
+          <div class="patient-profile">
+            <div class="patient-avatar" id="pt-avatar">JD</div>
+            <div class="patient-demographics">
+              <div class="demographics-row">
+                <h1 class="patient-name" id="pt-name">Jane Doe</h1>
+                <span class="chip chip-demographic" id="pt-demographic">45 yrs • Female</span>
+                <span class="provenance-tag-pill" id="pt-provenance" title="Provenance: Directly submitted by patient">[User Provided]</span>
+              </div>
+              <div class="intake-summary-row">
+                <div class="intake-group">
+                  <span class="intake-label">Symptoms:</span>
+                  <div class="chips-wrap" id="pt-symptoms-chips">
+                    <span class="chip chip-subtle">Fatigue</span>
+                    <span class="chip chip-subtle">Cold intolerance</span>
+                  </div>
+                </div>
+                <div class="intake-group">
+                  <span class="intake-label">Conditions:</span>
+                  <div class="chips-wrap" id="pt-conditions-chips">
+                    <span class="chip chip-subtle">Mild seasonal allergies</span>
+                  </div>
+                </div>
+                <div class="intake-group">
+                  <span class="intake-label">Allergies:</span>
+                  <div class="chips-wrap" id="pt-allergies-chips">
+                    <span class="chip chip-danger">Penicillin</span>
+                  </div>
+                </div>
+                <div class="intake-group">
+                  <span class="intake-label">Medications:</span>
+                  <div class="chips-wrap" id="pt-medications-chips">
+                    <span class="chip chip-accent">Levothyroxine 50 mcg</span>
+                    <span class="chip chip-subtle">Vitamin D3</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <button class="btn btn-sm btn-outline" id="btn-edit-intake" title="Edit Patient Intake Details">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 20h9"/>
+              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+            </svg>
+            Edit Intake
+          </button>
+        </div>
+      </div>
+
+      <!-- INCONSISTENCY DETECTION ALERTS (Priority Clinical Banner) -->
+      <div class="inconsistency-container" id="inconsistency-alerts-container">
+        <!-- Dynamic Inconsistency Alert Cards -->
+      </div>
+
+      <!-- STRUCTURED FHIR LAB OBSERVATIONS TABLE -->
+      <div class="observations-card card">
+        <div class="card-toolbar">
+          <div class="toolbar-title-wrap">
+            <h2 class="section-heading">Structured FHIR Observations</h2>
+            <span class="counter-badge" id="obs-count-badge">5 Tests</span>
+          </div>
+
+          <!-- Filter & Search -->
+          <div class="toolbar-controls">
+            <div class="search-input-wrap">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <input type="text" id="obs-search-input" placeholder="Search tests or codes...">
+            </div>
+            <div class="filter-pills" id="obs-filter-group">
+              <button class="filter-btn active" data-filter="all">All</button>
+              <button class="filter-btn" data-filter="flagged">Flagged</button>
+              <button class="filter-btn" data-filter="HIGH">High</button>
+              <button class="filter-btn" data-filter="LOW">Low</button>
+              <button class="filter-btn" data-filter="NORMAL">Normal</button>
+              <button class="filter-btn" data-filter="UNSPECIFIED">Unspecified</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Table View -->
+        <div class="table-responsive">
+          <table class="clinical-table" id="observations-table">
+            <thead>
+              <tr>
+                <th style="width: 28%;">Test Name & LOINC</th>
+                <th style="width: 16%;">Reported Value</th>
+                <th style="width: 22%;">Source Ref. Range</th>
+                <th style="width: 14%;">Interpretation</th>
+                <th style="width: 20%;">Provenance Origin</th>
+                <th style="width: 5%;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="observations-tbody">
+              <!-- Populated dynamically via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- NON-DIAGNOSTIC CLINICAL AI SUMMARY CARD -->
+      <div class="summary-card card" id="summary-section">
+        <div class="summary-header">
+          <div class="summary-title-wrap">
+            <div class="ai-spark-icon">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+              </svg>
+            </div>
+            <div>
+              <h2 class="summary-headline" id="summary-headline-text">Clinical Overview: Flagged Observations Evaluated</h2>
+              <span class="summary-sub">Synthesized strictly from reported results • Non-diagnostic education only</span>
+            </div>
+          </div>
+          <button class="btn btn-sm btn-ghost" id="btn-copy-summary" title="Copy patient summary to clipboard">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            </svg>
+            Copy Summary
+          </button>
+        </div>
+
+        <div class="summary-body">
+          <p class="summary-overview-paragraph" id="summary-overview-content">
+            Loading summary...
+          </p>
+
+          <!-- Flagged Items Cards Grid -->
+          <div class="flagged-cards-grid" id="summary-flagged-grid">
+            <!-- Dynamic flagged finding detail items -->
+          </div>
+
+          <!-- Doctor Discussion Points -->
+          <div class="doctor-questions-box">
+            <div class="box-title">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+              <span>Recommended Questions to Bring to Your Next Clinical Visit</span>
+            </div>
+            <ul class="questions-list" id="summary-questions-list">
+              <!-- Populated dynamically -->
+            </ul>
+          </div>
+
+          <!-- MANDATORY SAFETY DISCLAIMER -->
+          <div class="safety-disclaimer-banner" id="safety-disclaimer-card">
+            <div class="disclaimer-icon">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+            </div>
+            <div class="disclaimer-text">
+              <strong>MANDATORY SAFETY DISCLAIMER:</strong> MedLens is an educational and informational clinical intelligence tool designed to consolidate health data. It does <em>NOT</em> provide medical diagnoses, treatment plans, prescriptions, or clinical advice. All laboratory findings and evaluations must be reviewed with a licensed physician or healthcare provider before any clinical action is taken.
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- MODAL 1: Edit Patient Intake -->
+  <div class="modal-backdrop hidden" id="modal-intake">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Edit Patient Intake Details</h3>
+        <button class="btn-close-modal" id="btn-close-intake">&times;</button>
+      </div>
+      <form id="form-edit-intake" class="modal-form">
+        <div class="form-row">
+          <div class="form-group" style="flex: 1;">
+            <label for="intake-age">Patient Age</label>
+            <input type="number" id="intake-age" min="0" max="125" required>
+          </div>
+          <div class="form-group" style="flex: 1;">
+            <label for="intake-sex">Biological Sex</label>
+            <select id="intake-sex" required>
+              <option value="Female">Female</option>
+              <option value="Male">Male</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="intake-symptoms">Reported Symptoms (comma separated)</label>
+          <input type="text" id="intake-symptoms" placeholder="e.g., Fatigue, Cold intolerance, Weight gain">
+        </div>
+
+        <div class="form-group">
+          <label for="intake-conditions">Documented Medical Conditions (comma separated)</label>
+          <input type="text" id="intake-conditions" placeholder="e.g., Seasonal allergies (Leave empty to test Thyroid mismatch)">
+        </div>
+
+        <div class="form-group">
+          <label for="intake-allergies">Documented Allergies (comma separated)</label>
+          <input type="text" id="intake-allergies" placeholder="e.g., Penicillin, Sulfa drugs">
+        </div>
+
+        <div class="form-group">
+          <label for="intake-medications">Current Medications (comma separated)</label>
+          <input type="text" id="intake-medications" placeholder="e.g., Levothyroxine 50 mcg, Vitamin D3">
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" id="btn-cancel-intake">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save & Re-evaluate</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 2: Edit Observation Value Inline -->
+  <div class="modal-backdrop hidden" id="modal-edit-obs">
+    <div class="modal-card modal-sm">
+      <div class="modal-header">
+        <h3 id="edit-obs-title">Edit Observation Value</h3>
+        <button class="btn-close-modal" id="btn-close-obs-modal">&times;</button>
+      </div>
+      <form id="form-edit-obs" class="modal-form">
+        <input type="hidden" id="edit-obs-id">
+        <div class="form-group">
+          <label for="edit-obs-val">Numerical Value</label>
+          <input type="number" step="any" id="edit-obs-val" required>
+        </div>
+        <div class="form-group">
+          <label for="edit-obs-range">Source Reference Range (or leave blank for Unspecified)</label>
+          <input type="text" id="edit-obs-range" placeholder="e.g. 0.40 - 4.50">
+          <small class="form-help">Modifying this value updates the provenance tag to <code>[Clinician Edited]</code> and instantly recalculates inconsistency rules.</small>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" id="btn-cancel-obs">Cancel</button>
+          <button type="submit" class="btn btn-primary">Apply Amendment</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 3: FHIR R4 Bundle JSON Viewer -->
+  <div class="modal-backdrop hidden" id="modal-fhir-bundle">
+    <div class="modal-card modal-lg">
+      <div class="modal-header">
+        <div class="modal-title-row">
+          <span class="fhir-badge-modal">HL7 FHIR R4</span>
+          <h3>Clinical Bundle (JSON Document)</h3>
+        </div>
+        <button class="btn-close-modal" id="btn-close-fhir-modal">&times;</button>
+      </div>
+      <div class="modal-json-body">
+        <pre class="json-code" id="fhir-json-code">Loading FHIR Bundle JSON...</pre>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="btn-copy-fhir">Copy JSON</button>
+        <button class="btn btn-primary" id="btn-download-fhir">Download .json</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Provenance Tooltip Popover -->
+  <div class="provenance-tooltip hidden" id="provenance-popover">
+    <div class="popover-header">
+      <span class="popover-tag" id="popover-tag-label">[Extracted from Lab PDF]</span>
+      <span class="popover-conf" id="popover-conf-label">Confidence: 98%</span>
+    </div>
+    <div class="popover-body">
+      <div class="popover-line"><strong>Source:</strong> <span id="popover-source-file">report.pdf</span></div>
+      <div class="popover-line"><strong>Page:</strong> <span id="popover-source-page">Page 1</span></div>
+      <div class="popover-snippet-box">
+        <div class="snippet-label">Verbatim Extracted Line:</div>
+        <code id="popover-snippet-text">TSH 6.20 H 0.40 - 4.50 mIU/L</code>
+      </div>
+    </div>
+  </div>
+
+  <!-- Application Logic -->
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

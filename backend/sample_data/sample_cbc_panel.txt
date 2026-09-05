@@ -1,0 +1,21 @@
+METROPOLITAN HOSPITAL LABORATORY
+PATIENT: Emily Davis        DOB: 1993-02-17    AGE: 33    SEX: Female
+ORDER: CBC with Differential
+
+TEST NAME                       IN RANGE    OUT OF RANGE    REFERENCE RANGE    UNITS
+-------------------------------------------------------------------------------------
+White Blood Cell                6.4                         3.8 - 10.8         x10E3/uL
+Red Blood Cell                              3.82     L      4.20 - 5.40        x10E6/uL
+Hemoglobin                                  10.6     L      12.0 - 16.0        g/dL
+Hematocrit                                  32.8     L      37.0 - 47.0        %
+MCV                             85.8                        80.0 - 100.0       fL
+MCH                             27.7                        27.0 - 33.0        pg
+MCHC                            32.3                        32.0 - 36.0        g/dL
+Platelet Count                  248                         140 - 400          x10E3/uL
+Neutrophils %                   58.2                        40.0 - 74.0        %
+Lymphocytes %                   32.1                        19.0 - 48.0        %
+Monocytes %                     6.5                         4.0 - 12.0         %
+Eosinophils %                   2.6                         0.0 - 7.0          %
+Basophils %                     0.6                         0.0 - 2.0          %
+Reticulocyte Count              1.2                         0.5 - 2.5          %
+Blood Type                      A Positive
